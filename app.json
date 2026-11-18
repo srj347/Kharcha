@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "kharcha",
+    "name": "Kharcha",
     "slug": "kharcha",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,9 +8,12 @@
     "scheme": "kharcha",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "com.kharcha.expensetracker",
+      "supportsTablet": false
     },
     "android": {
+      "package": "com.kharcha.expensetracker",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -28,11 +31,33 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F7F7F4",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 96,
+          "dark": {
+            "backgroundColor": "#111214",
+            "image": "./assets/images/splash-icon.png"
+          }
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "26.0"
+          }
+        }
+      ],
+      "expo-sqlite",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Kharcha listens when you open the app so you can say an expense, like \"spent 500 on Swiggy\".",
+          "speechRecognitionPermission": "Kharcha turns your words into an expense on this iPhone. Audio stays on the device."
+        }
+      ],
+      "expo-sharing",
+      "./plugins/with-log-expense-intent"
     ],
     "experiments": {
       "typedRoutes": true,

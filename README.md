@@ -1,56 +1,64 @@
-# Welcome to your Expo app 👋
+# Kharcha
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A minimal, offline expense tracker for iPhone. Open the app (or double-tap the back of the phone), say "spent 500 on Swiggy", and the expense is saved. Speech recognition and the AI that reads the sentence both run on the device. No server.
 
-## Get started
+Plan and decisions: [docs/PLAN.md](docs/PLAN.md).
 
-1. Install dependencies
+## Requirements
 
-   ```bash
-   npm install
-   ```
+- macOS with Xcode 26+ (built with Xcode 27.1), Node 24, CocoaPods
+- iPhone 15 Pro or newer on iOS 26+ with Apple Intelligence on, for the AI step
+- A UTF-8 shell locale for CocoaPods: `export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run
 
 ```bash
-npm run reset-project
+npm install
+npx expo run:ios                 # simulator
+npx expo run:ios --device        # your iPhone (pick a signing team in Xcode the first time)
+npx expo start --dev-client      # JS server for an installed dev build
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+The `ios/` folder is generated (`npx expo prebuild -p ios --clean`). Change native settings in `app.json` and `plugins/`, not in `ios/`.
 
-### Other setup steps
+## Check
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm test             # unit tests (Jest, TZ=Asia/Kolkata)
+npm run typecheck
+npm run lint
+./tools/eval/run-eval.sh   # prompt accuracy on this Mac's Apple model (macOS 26+, Apple Intelligence on)
+```
 
-## Learn more
+## Simulator limits (development only)
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Voice input is off in the simulator.** Without microphone access for Simulator on the Mac, CoreAudio deadlocks and iOS kills the app. Use the dashed **DEV** field on the Add tab: it sends a typed sentence through the same path as speech. To try real speech, allow Simulator in macOS Settings › Privacy & Security › Microphone, then set `SIMULATOR_VOICE_INPUT = true` in `src/features/voice/simulator-voice.ts`.
+- **Apple's model cannot run in the simulator** (it fails with `promptTemplateNotFound`). In development builds on the simulator only, a stand-in answers the 60 sentences of `tools/eval/phrases.json` with their expected results, so the auto-save flow can be tested. Other sentences fall back to the confirm card. Real iPhones always use the real model.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Shortcut / Back Tap
 
-## Join the community
+The app adds a **Log Expense** action to the Shortcuts app and Siri ("Log expense in Kharcha"). To use Back Tap: Settings › Accessibility › Touch › Back Tap › Double Tap › Log Expense. The in-app guide is in Settings › Shortcut & Back Tap.
 
-Join our community of developers creating universal apps.
+## Release to TestFlight
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Needs a paid Apple Developer account.
+
+```bash
+npx eas-cli@latest login
+npx eas-cli@latest build -p ios --profile production
+npx eas-cli@latest submit -p ios --latest
+```
+
+Before the first release, change `ios.bundleIdentifier` in `app.json` if `com.kharcha.expensetracker` is not free on your account.
+
+## Layout
+
+```
+src/app/            routes (expo-router): tabs, entry sheet, settings stack, deep link
+src/db/             SQLite adapter, migrations, repositories, live-query hook
+src/features/       add, entry, voice, extract (AI), history, insights, categories, settings, shortcut
+src/shared/         tokens (light/dark), toast, shared components, utils
+plugins/            Expo config plugin + Swift App Intent
+tools/eval/         60-sentence accuracy check against Apple's on-device model
+tools/icon/         app icon generator
+```
